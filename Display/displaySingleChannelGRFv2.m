@@ -4,7 +4,7 @@
 % color stimuli), use sideChoice to specify which of the two side to use
 % for each parameter.
 
-function displaySingleChannelGRF_v2(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag)
+function displaySingleChannelGRFv2(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag)
 
 if ~exist('folderSourceString','var');  folderSourceString='F:';        end
 if ~exist('gridType','var');            gridType='Microelectrode';      end
@@ -380,7 +380,7 @@ hElectrodes = showElectrodeLocations(electrodeGridPos,analogChannelsStored(get(h
 if length(aValsUnique)>=5
     mapRatio = 2/3; % this sets the relative ratio of the mapping plots versus orientation plots
 else
-    mapRatio = 1/2;
+    mapRatio = 1/4; % MODIFIED mapRatio = 1/4;
 end
 
 startXPos = staticStartPos; endXPos = 0.95; startYPos = 0.05; mainRFHeight = 0.55; centerGap = 0.05;
@@ -407,12 +407,12 @@ uicontrol('Unit','Normalized','Position',[0 0.975 1 0.025],...
 remainingWidth = otherPlotsWidth;
 remainingHeight= mainRFHeight;
 
-otherGapSize = 0.04;
-% otherHeight = (remainingHeight-4*otherGapSize);
+otherGapSize = 0.02;
+otherHeight = (remainingHeight-otherGapSize);
 
 % temporalFreqGrid = [startXPos startYPos                               remainingWidth otherHeight];
 % contrastGrid     = [startXPos startYPos+ (otherHeight+otherGapSize)   remainingWidth otherHeight];
-spatialFreqGrid  = [startXPos startYPos remainingWidth remainingHeight];
+spatialFreqGrid  = [startXPos startYPos remainingWidth otherHeight];
 % orientationGrid  = [startXPos startYPos+ 3*(otherHeight+otherGapSize) remainingWidth otherHeight];
 % sigmaGrid        = [startXPos startYPos+ 4*(otherHeight+otherGapSize) remainingWidth otherHeight];
 
@@ -1007,6 +1007,8 @@ end
 % Main loop
 computationVals=zeros(1,numCols);
 for j=1:length(fValsUnique)
+    ii = floor((j-1)/30)+1;
+    jj = mod(j-1, 30)+1;
     clear goodPos
     goodPos = parameterCombinations{aList(j),eList(j),sList(j),fList(j),oList(j),cList(j),tList(j)};
     goodPos = setdiff(goodPos,badTrials);
@@ -1035,7 +1037,7 @@ for j=1:length(fValsUnique)
             erp = mean(analogData(goodPos,:),1);
             erp = erp - mean(erp(blPos));
             
-            plot(plotHandles(j),timeVals,erp,'color',plotColor);
+            plot(plotHandles(ii, jj),timeVals,erp,'color',plotColor);
             
             if isempty(o) % Orientation tuning
                 computationVals(j) = abs(min(erp(xsComputation)));
@@ -1049,14 +1051,14 @@ for j=1:length(fValsUnique)
             fftST = abs(fft(analogData(goodPos,stPos),[],2));
 
             if analysisType == 4
-                plot(plotHandles(j),xs,log10(mean(fftBL)),'g');
-                set(plotHandles(j),'Nextplot','add');
-                plot(plotHandles(j),xs,log10(mean(fftST)),'k');
-                set(plotHandles(j),'Nextplot','replace');
+                plot(plotHandles(ii, jj),xs,log10(mean(fftBL)),'g');
+                set(plotHandles(ii, jj),'Nextplot','add');
+                plot(plotHandles(ii, jj),xs,log10(mean(fftST)),'k');
+                set(plotHandles(ii, jj),'Nextplot','replace');
             end
 
             if analysisType == 5
-                plot(plotHandles(j),xs,log10(mean(fftST))-log10(mean(fftBL)),'color',plotColor);
+                plot(plotHandles(ii, jj),xs,log10(mean(fftST))-log10(mean(fftBL)),'color',plotColor);
             end
             
             if isempty(o) % Orientation tuning
@@ -1068,14 +1070,14 @@ for j=1:length(fValsUnique)
             fftERPST = abs(fft(mean(analogData(goodPos,stPos),1)));
 
             if analysisType == 7
-                plot(plotHandles(j),xs,log10(fftERPBL),'g');
-                set(plotHandles(j),'Nextplot','add');
-                plot(plotHandles(j),xs,log10(fftERPST),'k');
-                set(plotHandles(j),'Nextplot','replace');
+                plot(plotHandles(ii, jj),xs,log10(fftERPBL),'g');
+                set(plotHandles(ii, jj),'Nextplot','add');
+                plot(plotHandles(ii, jj),xs,log10(fftERPST),'k');
+                set(plotHandles(ii, jj),'Nextplot','replace');
             end
 
             if analysisType == 8
-                plot(plotHandles(j),xs,log10(fftERPST)-log10(fftERPBL),'color',plotColor);
+                plot(plotHandles(ii, jj),xs,log10(fftERPST)-log10(fftERPBL),'color',plotColor);
             end
             
             if isempty(o) % Orientation tuning
@@ -1094,23 +1096,23 @@ for j=1:length(fValsUnique)
             [S,timeTF,freqTF] = mtspecgramc(analogData(goodPos,:)',movingwin,params);
             xValToPlot = timeTF+timeVals(1)-1/Fs;
             if (analysisType==9)
-                pcolor(plotHandles(j),xValToPlot,freqTF,log10(S'));
-                shading(plotHandles(j),'interp');
+                pcolor(plotHandles(ii, jj),xValToPlot,freqTF,log10(S'));
+                shading(plotHandles(ii, jj),'interp');
             else
                 blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
                 logS = log10(S);
                 blPower = mean(logS(blPos,:),1);
                 logSBL = repmat(blPower,length(xValToPlot),1);
-                pcolor(plotHandles(j),xValToPlot,freqTF,10*(logS-logSBL)');
-                shading(plotHandles(j),'interp');
+                pcolor(plotHandles(ii, jj),xValToPlot,freqTF,10*(logS-logSBL)');
+                shading(plotHandles(ii, jj),'interp');
             end
         end
 
         % Display title
         if (j==1)
-            title(plotHandles(j),[titleParam num2str(titleList(j))],'FontSize',titleFontSize);
+            title(plotHandles(ii, jj),[titleParam num2str(titleList(j))],'FontSize',titleFontSize);
         else
-            title(plotHandles(j),num2str(titleList(j)),'FontSize',titleFontSize);
+            title(plotHandles(ii, jj),num2str(titleList(j)),'FontSize',titleFontSize);
         end
     end
 end
@@ -1513,7 +1515,7 @@ end
 function rescaleData(plotHandles,xMin,xMax,yLims)
 
 [numRows,numCols] = size(plotHandles);
-labelSize=12;
+labelSize=8; % MODIFIED labelSize=12;
 for i=1:numRows
     for j=1:numCols
         axis(plotHandles(i,j),[xMin xMax yLims]);
