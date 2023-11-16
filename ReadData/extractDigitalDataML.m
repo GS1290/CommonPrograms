@@ -64,13 +64,17 @@ conditionNumList = [];
 goodStimTimes = [];
 for i=1:length(goodTrials)
     trialNum = goodTrials(i);
-    conditionNumList = cat(2,conditionNumList,data(trialNum).Condition); % Note that this only works when there is a single stimulus per trial
-    goodStimTimes = cat(2,goodStimTimes,stimOnTimes(trialNumOfEachStim==trialNum));
+    if isfield(data(trialNum).UserVars, "Stimuli")
+        conditionNumList = cat(2,conditionNumList,data(trialNum).UserVars.Stimuli);
+    else
+        conditionNumList = cat(2,conditionNumList,data(trialNum).Condition); % Note that this only works when there is a single stimulus per trial
+    end
+    goodStimTimes = cat(2,goodStimTimes,stimOnTimes(trialNumOfEachStim==trialNum)');
 end
 
 % Set up dummy variables. Condition number is assigned to orientation
 numStimuli = length(conditionNumList);
-stimResults.orientation = conditionNumList;
+stimResults.spatialFrequency = conditionNumList; %MODIFIED stimResults.orientation = conditionNumList;
 
 stimResults.azimuth = zeros(1,numStimuli);
 stimResults.elevation = zeros(1,numStimuli);
@@ -78,7 +82,7 @@ stimResults.sigma = zeros(1,numStimuli);
 stimResults.radius = zeros(1,numStimuli);
 stimResults.contrast = zeros(1,numStimuli);
 stimResults.temporalFrequency = zeros(1,numStimuli);
-stimResults.spatialFrequency = zeros(1,numStimuli);
+stimResults.orientation = zeros(1,numStimuli); %MODIFIED stimResults.spatialFrequency = zeros(1,numStimuli);
 
 stimResults.time = goodStimTimes;
 stimResults.side = 0; % dummy variable in this case
