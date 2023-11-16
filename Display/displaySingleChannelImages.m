@@ -4,7 +4,7 @@
 % color stimuli), use sideChoice to specify which of the two side to use
 % for each parameter.
 
-function displaySingleChannelGRFv2(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag)
+function displaySingleChannelGRFv2(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag,nRow)
 
 if ~exist('folderSourceString','var');  folderSourceString='F:';        end
 if ~exist('gridType','var');            gridType='Microelectrode';      end
@@ -12,7 +12,7 @@ if ~exist('gridLayout','var');          gridLayout=2;                   end
 if ~exist('sideChoice','var');          sideChoice=[];                  end
 if ~exist('badTrialNameStr','var');     badTrialNameStr = '_v5';        end
 if ~exist('useCommonBadTrialsFlag','var'); useCommonBadTrialsFlag = 1;  end
-
+if ~exist('nRow','var'); nRow = 6;  end
 folderName = fullfile(folderSourceString,'data',subjectName,gridType,expDate,protocolName);
 
 % Get folders
@@ -420,7 +420,7 @@ spatialFreqGrid  = [startXPos startYPos remainingWidth otherHeight];
 % hTemporalFreqPlot = getPlotHandles(1,length(tValsUnique),temporalFreqGrid,0.002);
 % hContrastPlot     = getPlotHandles(1,length(cValsUnique),contrastGrid,0.002);
 % hOrientationPlot  = getPlotHandles(1,length(oValsUnique),orientationGrid,0.002);
-hSpatialFreqPlot  = getPlotHandles(6,ceil(length(fValsUnique)/6),spatialFreqGrid,0.002, otherGapSize);
+hSpatialFreqPlot  = getPlotHandles(nRow,ceil(length(fValsUnique)/nRow),spatialFreqGrid,0.002, otherGapSize);
 % hSigmaPlot        = getPlotHandles(1,length(sValsUnique),sigmaGrid,0.002);
 
 colormap jet
@@ -496,7 +496,7 @@ colormap jet
             % plotLFPData1Parameter1Channel(hOrientationPlot,analogChannelString,a,e,s,f,[],c,t,folderLFP,...
             %     analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag);
             plotLFPData1Parameter1Channel(hSpatialFreqPlot,analogChannelString,a,e,s,[],o,c,t,folderLFP,...
-                analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag);
+                analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag,nRow);
             % plotLFPData1Parameter1Channel(hSigmaPlot,analogChannelString,a,e,[],f,o,c,t,folderLFP,...
             %     analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag);
 
@@ -871,7 +871,7 @@ end
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotLFPData1Parameter1Channel(plotHandles,channelString,a,e,s,f,o,c,t,folderLFP,...
-analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag)
+analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag,nRow)
 
 folderExtract = fullfile(folderName,'extractedData');
 folderSegment = fullfile(folderName,'segmentedData');
@@ -1006,9 +1006,10 @@ end
 
 % Main loop
 computationVals=zeros(1,numCols);
+% nCol = ceil(length(fValsUnique)/nRow);
 for j=1:length(fValsUnique)
-    ii = floor((j-1)/30)+1;
-    jj = mod(j-1, 30)+1;
+    ii = mod(j-1,nRow)+1; % ii = floor((j-1)/nCol)+1;
+    jj = floor((j-1)/nRow)+1; % jj = mod(j-1, nCol)+1;
     clear goodPos
     goodPos = parameterCombinations{aList(j),eList(j),sList(j),fList(j),oList(j),cList(j),tList(j)};
     goodPos = setdiff(goodPos,badTrials);
