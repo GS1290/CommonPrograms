@@ -4,7 +4,7 @@
 % color stimuli), use sideChoice to specify which of the two side to use
 % for each parameter.
 
-function displaySingleChannelGRFv2(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag,nRow)
+function displaySingleChannelImages(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag,nRow)
 
 if ~exist('folderSourceString','var');  folderSourceString='F:';        end
 if ~exist('gridType','var');            gridType='Microelectrode';      end
