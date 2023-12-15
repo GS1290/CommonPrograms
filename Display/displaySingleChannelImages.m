@@ -12,7 +12,7 @@ if ~exist('gridLayout','var');          gridLayout=2;                   end
 if ~exist('sideChoice','var');          sideChoice=[];                  end
 if ~exist('badTrialNameStr','var');     badTrialNameStr = '_v5';        end
 if ~exist('useCommonBadTrialsFlag','var'); useCommonBadTrialsFlag = 1;  end
-if ~exist('nRow','var'); nRow = 6;  end
+if ~exist('nRow','var'); nRow = 5;  end
 folderName = fullfile(folderSourceString,'data',subjectName,gridType,expDate,protocolName);
 
 % Get folders
@@ -79,6 +79,8 @@ hDynamicPanel = uipanel('Title','Parameters','fontSize', fontSizeLarge, ...
 
 % Analog channel
 [analogChannelStringList,analogChannelStringArray] = getAnalogStringFromValues(analogChannelsStored,analogInputNums);
+analogChannelStringList = [analogChannelStringList 'V1|V4|'];
+analogChannelStringArray = [analogChannelStringArray 'V1' 'V4'];
 uicontrol('Parent',hDynamicPanel,'Unit','Normalized', ...
     'Position',[0 1-(dynamicHeight+dynamicGap) dynamicTextWidth dynamicHeight],...
     'Style','text','String','Analog Channel','FontSize',fontSizeSmall);
@@ -760,8 +762,24 @@ titleFontSize = 10;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Get data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear signal analogData
-x=load(fullfile(folderLFP,channelString));
-analogData=x.analogData;
+if channelString == "V1" || channelString =="V4"
+    if channelString == "V1"
+        elecNums= [1 3 4 5 6 7 8 10 11 13 14 15 17 18 19 20 ...
+            21 22 23 24 25 26 27 28 29 30 31 34 35 36 41 42];
+    else
+        elecNums=[51 52	53	54	56	58	59	63	64	65 ...
+        	66	68	69	71	72	74	75	76	77	78	80	81 ...
+        	82	83	85	86	87	89	90	92	93	94	95	96];
+    end
+    analogDataAllElecs = cell(length(elecNums),1);
+    for i=1:length(elecNums)
+        x=load(fullfile(folderLFP,['elec' num2str(elecNums(i))]));
+        analogDataAllElecs{i}=x.analogData;
+    end
+else
+    x=load(fullfile(folderLFP,channelString));
+    analogData=x.analogData;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%% Change Reference %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if strcmpi(referenceChannelString,'None')
@@ -837,10 +855,21 @@ for j=1:length(fValsUnique)
         % freqComputation = intersect(find(xs>=freqForComputation(1)),find(xs<=freqForComputation(2)));
 
         if analysisType == 1        % compute ERP
-            clear erp
-            erp = mean(analogData(goodPos,:),1);
-            erp = erp - mean(erp(blPos));
-            
+            if channelString == "V1" || channelString == "V4"
+                clear erp erpAllElec
+                erpAllElec = zeros(length(elecNums), length(timeVals));
+                for i=1:length(elecNums)
+                    analogData = analogDataAllElecs{i};
+                    erpAllElec(i,:) = mean(analogData(goodPos,:),1);
+                    erpAllElec(i,:) = erpAllElec(i,:) - mean(erpAllElec(i,blPos));
+                end
+                erp = mean(erpAllElec, 1);
+            else
+                clear erp
+                erp = mean(analogData(goodPos,:),1);
+                erp = erp - mean(erp(blPos));
+            end
+
             plot(plotHandles(ii, jj),timeVals,erp,'color',plotColor);
             
 
@@ -887,19 +916,37 @@ for j=1:length(fValsUnique)
             params.pad      = -1;
             params.Fs       = Fs;
             params.trialave = 1; %averaging across trials
-            
-            [S,timeTF,freqTF] = mtspecgramc(analogData(goodPos,:)',movingwin,params);
-            xValToPlot = timeTF+timeVals(1)-1/Fs;
-            if (analysisType==9)
-                pcolor(plotHandles(ii, jj),xValToPlot,freqTF,log10(S'));
-                shading(plotHandles(ii, jj),'interp');
+            if channelString=="V1" || channelString=="V4"
+                for i=1:length(elecNums)
+                    [S(i,:,:),timeTF,freqTF] = mtspecgramc(analogDataAllElecs{i}(goodPos,:)',movingwin,params);
+                end
+                xValToPlot = timeTF+timeVals(1)-1/Fs;
+                if (analysisType==9)
+                    pcolor(plotHandles(ii, jj),xValToPlot,freqTF,log10(squeeze(mean(S, 1))'));
+                    shading(plotHandles(ii, jj),'interp');
+                else
+                    blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
+                    logS = log10(S);
+                    blPower = mean(logS(:,blPos,:),2);
+                    logSBL = repmat(blPower,1, length(xValToPlot),1);
+                    pcolor(plotHandles(ii, jj),xValToPlot,freqTF,10*squeeze(mean(logS-logSBL,1))');
+                    shading(plotHandles(ii, jj),'interp');
+                end
             else
-                blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
-                logS = log10(S);
-                blPower = mean(logS(blPos,:),1);
-                logSBL = repmat(blPower,length(xValToPlot),1);
-                pcolor(plotHandles(ii, jj),xValToPlot,freqTF,10*(logS-logSBL)');
-                shading(plotHandles(ii, jj),'interp');
+
+                [S,timeTF,freqTF] = mtspecgramc(analogData(goodPos,:)',movingwin,params);
+                xValToPlot = timeTF+timeVals(1)-1/Fs;
+                if (analysisType==9)
+                    pcolor(plotHandles(ii, jj),xValToPlot,freqTF,log10(S'));
+                    shading(plotHandles(ii, jj),'interp');
+                else
+                    blPos = intersect(find(xValToPlot>=blRange(1)),find(xValToPlot<blRange(2)));
+                    logS = log10(S);
+                    blPower = mean(logS(blPos,:),1);
+                    logSBL = repmat(blPower,length(xValToPlot),1);
+                    pcolor(plotHandles(ii, jj),xValToPlot,freqTF,10*(logS-logSBL)');
+                    shading(plotHandles(ii, jj),'interp');
+                end
             end
         end
 
