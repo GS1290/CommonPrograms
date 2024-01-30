@@ -96,6 +96,7 @@ uicontrol('Parent',hDynamicPanel,'Unit','Normalized', ...
     
 if ~isempty(neuralChannelsStored)
     neuralChannelString = getNeuralStringFromValues(neuralChannelsStored,SourceUnitIDs);
+    neuralChannelString = [neuralChannelString 'V1|V4|'];
     hNeuralChannel = uicontrol('Parent',hDynamicPanel,'Unit','Normalized', ...
         'BackgroundColor', backgroundColor, 'Position', ...
         [dynamicTextWidth 1-2*(dynamicHeight+dynamicGap) 1-dynamicTextWidth dynamicHeight], ...
@@ -395,12 +396,30 @@ colormap jet
             
         elseif analysisType == 2 || analysisType == 3
             channelPos = get(hNeuralChannel,'val');
-            channelNumber = neuralChannelsStored(channelPos);
-            unitID = SourceUnitIDs(channelPos);
+            if channelPos == length(neuralChannelsStored)+1
+                channelNumber=getGoodSpikeElectrodes(subjectName,expDate,protocolName,folderSourceString);
+                channelNumber = channelNumber(channelNumber<49);
+                disp("Good spike units V1: "+num2str(channelNumber));
+                unitID=0;
+            elseif channelPos == length(neuralChannelsStored)+2
+                channelNumber=getGoodSpikeElectrodes(subjectName,expDate,protocolName,folderSourceString);
+                channelNumber = channelNumber(channelNumber>48);
+                disp("Good spike units V4: "+num2str(channelNumber));
+                unitID=0;
+            else
+                channelNumber = neuralChannelsStored(channelPos);
+                unitID = SourceUnitIDs(channelPos);
+            end
             % plotSpikeData1Channel(plotHandles,channelNumber,s,f,o,c,t,folderSpikes,...
             %     analysisType,timeVals,plotColor,unitID,folderName,sideChoice);
             plotSpikeData1Parameter1Channel(hSpatialFreqPlot,channelNumber,a,e,s,[],o,c,t,folderSpikes,...
                 analysisType,timeVals,plotColor,unitID,folderName,sideChoice,nRow);
+
+            if channelPos<=length(analogChannelsStored)
+                channelNumber = neuralChannelsStored(channelPos);
+            else
+                channelNumber = 0;
+            end
             
         else
             analogChannelPos = get(hAnalogChannel,'val');
@@ -1046,9 +1065,15 @@ folderSegment = fullfile(folderName,'segmentedData');
 
 % Get the data
 clear spikeData
-x=load(fullfile(folderSpikes,['elec' num2str(channelNumber) '_SID' num2str(unitID) '.mat']));
-spikeData=x.spikeData;
-
+if length(channelNumber)>1
+    for k=1:length(channelNumber)
+        x=load(fullfile(folderSpikes,['elec' num2str(channelNumber(k)) '_SID' num2str(unitID) '.mat']));
+        spikeDataGoodUnits{k}=x.spikeData;
+    end
+else
+    x=load(fullfile(folderSpikes,['elec' num2str(channelNumber) '_SID' num2str(unitID) '.mat']));
+    spikeData=x.spikeData;
+end
 % Get bad trials
 badTrialFile = fullfile(folderSegment,'badTrials.mat');
 if ~exist(badTrialFile,'file')
@@ -1086,13 +1111,24 @@ for j=1:length(fValsUnique)
         disp('No entries for this combination..')
     else
         disp(['pos=' num2str(j) ',n=' num2str(length(goodPos))]);
-        if analysisType == 2
-            [psthVals,xs] = getPSTH(spikeData(goodPos),10,[timeVals(1) timeVals(end)]);
-            plot(plotHandles(ii, jj),xs,psthVals,'color',plotColor);
+        if length(channelNumber)>1
+            if analysisType == 2
+                for k=1:length(channelNumber)
+                    [psthVals(k,:),xs] = getPSTH(spikeDataGoodUnits{k}(goodPos),10,[timeVals(1) timeVals(end)]);
+                end
+                plot(plotHandles(ii, jj),xs,squeeze(mean(psthVals,1)),'color',plotColor);
+            else
+                disp('Use firing rate instead')
+            end
         else
-            X = spikeData(goodPos);
-            axes(plotHandles(ii, jj)); %#ok<LAXES>
-            rasterplot(X,1:length(X),plotColor);
+            if analysisType == 2
+                [psthVals,xs] = getPSTH(spikeData(goodPos),10,[timeVals(1) timeVals(end)]);
+                plot(plotHandles(ii, jj),xs,psthVals,'color',plotColor);
+            else
+                X = spikeData(goodPos);
+                axes(plotHandles(ii, jj)); %#ok<LAXES>
+                rasterplot(X,1:length(X),plotColor);
+            end
         end
     end
 
