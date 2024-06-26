@@ -970,12 +970,24 @@ for j=1:length(fValsUnique)
         end
 
         % Display title
-        if (j==1)
-            title_obj = title(plotHandles(ii, jj),[titleParam num2str(titleList(j))],'FontSize',titleFontSize,'Units','normalized');
-            set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+        if isfile(fullfile(folderExtract, 'stimDetails.mat'))
+            stimDetails = load(fullfile(folderExtract, 'stimDetails.mat'));
+            stim2img = stimDetails.stim2img;
+            if (j==1)
+                title_obj = title(plotHandles(ii, jj),[titleParam stim2img.img(titleList(j))],'FontSize',titleFontSize,'Units','normalized');
+                set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+            else
+                title_obj = title(plotHandles(ii, jj),stim2img.img(titleList(j)),'FontSize',titleFontSize,'Units','normalized');
+                set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+            end
         else
-            title_obj = title(plotHandles(ii, jj),num2str(titleList(j)),'FontSize',titleFontSize,'Units','normalized');
-            set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+            if (j==1)
+                title_obj = title(plotHandles(ii, jj),[titleParam num2str(titleList(j))],'FontSize',titleFontSize,'Units','normalized');
+                set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+            else
+                title_obj = title(plotHandles(ii, jj),num2str(titleList(j)),'FontSize',titleFontSize,'Units','normalized');
+                set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+            end
         end
     end
 end
@@ -1133,12 +1145,24 @@ for j=1:length(fValsUnique)
     end
 
     % Display title
-    if (j==1)
-        title_obj = title(plotHandles(ii, jj),[titleParam num2str(titleList(j))],'FontSize',titleFontSize, 'Units', 'normalized');
-        set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+    if isfile(fullfile(folderExtract, 'stimDetails.mat'))
+        stimDetails = load(fullfile(folderExtract, 'stimDetails.mat'));
+        stim2img = stimDetails.stim2img;
+        if (j==1)
+            title_obj = title(plotHandles(ii, jj),[titleParam stim2img.img(titleList(j))],'FontSize',titleFontSize, 'Units', 'normalized');
+            set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+        else
+            title_obj = title(plotHandles(ii, jj),stim2img.img(titleList(j)),'FontSize',titleFontSize, 'Units', 'normalized');
+            set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+        end
     else
-        title_obj = title(plotHandles(ii, jj),num2str(titleList(j)),'FontSize',titleFontSize, 'Units', 'normalized');
-        set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+        if (j==1)
+            title_obj = title(plotHandles(ii, jj),[titleParam num2str(titleList(j))],'FontSize',titleFontSize, 'Units', 'normalized');
+            set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+        else
+            title_obj = title(plotHandles(ii, jj),num2str(titleList(j)),'FontSize',titleFontSize, 'Units', 'normalized');
+            set(title_obj, 'Position', get(title_obj, 'Position') + [0 -0.07 0]);
+        end
     end
 end
 end
