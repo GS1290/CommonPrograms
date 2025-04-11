@@ -53,6 +53,7 @@ end
 %%%%%%%%%%%%%%%%%%%%% Get Good trials from ML data %%%%%%%%%%%%%%%%%%%%%%%%
 x=load(fullfile(folderExtract,'ML.mat'));
 data = x.data;
+stimTable = x.TrialRecord.User.StimTable;
 
 if length(data) ~= numTrials
     error('Number of trials in ML and Digital stream do not match');
@@ -74,15 +75,15 @@ end
 
 % Set up dummy variables. Condition number is assigned to orientation
 numStimuli = length(conditionNumList);
-stimResults.spatialFrequency = conditionNumList; %MODIFIED stimResults.orientation = conditionNumList;
+stimResults.spatialFrequency = stimTable.sf(conditionNumList)'; %MODIFIED stimResults.orientation = conditionNumList;
 
-stimResults.azimuth = zeros(1,numStimuli);
-stimResults.elevation = zeros(1,numStimuli);
-stimResults.sigma = zeros(1,numStimuli);
-stimResults.radius = zeros(1,numStimuli);
-stimResults.contrast = zeros(1,numStimuli);
-stimResults.temporalFrequency = zeros(1,numStimuli);
-stimResults.orientation = zeros(1,numStimuli); %MODIFIED stimResults.spatialFrequency = zeros(1,numStimuli);
+stimResults.azimuth = stimTable.azi(conditionNumList)';
+stimResults.elevation = stimTable.ele(conditionNumList)';
+stimResults.sigma = stimTable.radii(conditionNumList)';
+stimResults.radius = stimTable.radii(conditionNumList)';
+stimResults.contrast = stimTable.con(conditionNumList)';
+stimResults.temporalFrequency = stimTable.microstim(conditionNumList)';
+stimResults.orientation = stimTable.ori(conditionNumList)'; %MODIFIED stimResults.spatialFrequency = zeros(1,numStimuli);
 
 stimResults.time = goodStimTimes;
 stimResults.side = 0; % dummy variable in this case
