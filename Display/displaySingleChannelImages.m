@@ -4,7 +4,7 @@
 % color stimuli), use sideChoice to specify which of the two side to use
 % for each parameter.
 
-function displaySingleChannelImages(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag,nRow)
+function displaySingleChannelImages(subjectName,expDate,protocolName,folderSourceString,gridType,gridLayout,sideChoice,badTrialNameStr,useCommonBadTrialsFlag,nRow,plotRowWise)
 
 if ~exist('folderSourceString','var');  folderSourceString='F:';        end
 if ~exist('gridType','var');            gridType='Microelectrode';      end
@@ -12,7 +12,8 @@ if ~exist('gridLayout','var');          gridLayout=2;                   end
 if ~exist('sideChoice','var');          sideChoice=[];                  end
 if ~exist('badTrialNameStr','var');     badTrialNameStr = '_v5';        end
 if ~exist('useCommonBadTrialsFlag','var'); useCommonBadTrialsFlag = 1;  end
-if ~exist('nRow','var'); nRow = 5;  end
+if ~exist('nRow','var'); nRow = 5;                                      end
+if ~exist('plotRowWise','var'); plotRowWise = 1;                        end
 folderName = fullfile(folderSourceString,'data',subjectName,gridType,expDate,protocolName);
 
 % Get folders
@@ -413,7 +414,7 @@ colormap jet
             % plotSpikeData1Channel(plotHandles,channelNumber,s,f,o,c,t,folderSpikes,...
             %     analysisType,timeVals,plotColor,unitID,folderName,sideChoice);
             plotSpikeData1Parameter1Channel(hSpatialFreqPlot,channelNumber,a,e,s,[],o,c,t,folderSpikes,...
-                analysisType,timeVals,plotColor,unitID,folderName,sideChoice,nRow);
+                analysisType,timeVals,plotColor,unitID,folderName,sideChoice,nRow,plotRowWise);
 
             if channelPos<=length(analogChannelsStored)
                 channelNumber = neuralChannelsStored(channelPos);
@@ -433,7 +434,7 @@ colormap jet
             % plotLFPData1Parameter1Channel(hOrientationPlot,analogChannelString,a,e,s,f,[],c,t,folderLFP,...
             %     analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag);
             plotLFPData1Parameter1Channel(hSpatialFreqPlot,analogChannelString,a,e,s,[],o,c,t,folderLFP,...
-                analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag,nRow);
+                analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag,nRow,plotRowWise);
             % plotLFPData1Parameter1Channel(hSigmaPlot,analogChannelString,a,e,[],f,o,c,t,folderLFP,...
             %     analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag);
 
@@ -764,7 +765,7 @@ end
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotLFPData1Parameter1Channel(plotHandles,channelString,a,e,s,f,o,c,t,folderLFP,...
-analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag,nRow)
+analysisType,timeVals,plotColor,blRange,stRange,folderName,sideChoice,referenceChannelString,badTrialNameStr,useCommonBadTrialsFlag,nRow,plotRowWise)
 
 folderExtract = fullfile(folderName,'extractedData');
 folderSegment = fullfile(folderName,'segmentedData');
@@ -783,8 +784,11 @@ titleFontSize = 10;
 clear signal analogData
 if channelString == "V1" || channelString =="V4"
     if channelString == "V1"
-        elecNums= [1 3 4 5 6 7 8 10 11 13 14 15 17 18 19 20 ...
-            21 22 23 24 25 26 27 28 29 30 31 34 35 36 41 42];
+        % elecNums= [1 3 4 5 6 7 8 10 11 13 14 15 17 18 19 20 ...
+        %     21 22 23 24 25 26 27 28 29 30 31 34 35 36 41 42];
+        elecNums = [49 50 51 52 53 54 55 56 57 58 59 60 62 63 ...
+            64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 ...
+            81 82 83 85 86 88 89 91 92 93];
     else
         elecNums=[51 52	53	54	56	58	59	63	64	65 ...
         	66	68	69	71	72	74	75	76	77	78	80	81 ...
@@ -846,10 +850,15 @@ end
 
 % Main loop
 % computationVals=zeros(1,numCols);
-% nCol = ceil(length(fValsUnique)/nRow);
+nCol = ceil(length(fValsUnique)/nRow);
 for j=1:length(fValsUnique)
-    ii = mod(j-1,nRow)+1; % ii = floor((j-1)/nCol)+1;
-    jj = floor((j-1)/nRow)+1; % jj = mod(j-1, nCol)+1;
+    if plotRowWise
+        ii = floor((j-1)/nCol)+1;
+        jj = mod(j-1, nCol)+1;
+    else
+        ii = mod(j-1,nRow)+1; % ii = floor((j-1)/nCol)+1;
+        jj = floor((j-1)/nRow)+1; % jj = mod(j-1, nCol)+1;
+    end
     clear goodPos
     goodPos = parameterCombinations{aList(j),eList(j),sList(j),fList(j),oList(j),cList(j),tList(j)};
     goodPos = setdiff(goodPos,badTrials);
@@ -1065,7 +1074,7 @@ end
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function plotSpikeData1Parameter1Channel(plotHandles,channelNumber,a,e,s,f,o,c,t,folderSpikes,...
-analysisType,timeVals,plotColor,unitID,folderName,sideChoice,nRow)
+analysisType,timeVals,plotColor,unitID,folderName,sideChoice,nRow,plotRowWise)
 titleFontSize = 12;
 
 folderExtract = fullfile(folderName,'extractedData');
@@ -1111,10 +1120,15 @@ if isempty(f)
 end
 
 % Plot
-
+nCol = ceil(length(fValsUnique)/nRow);
 for j=1:length(fValsUnique)
-    ii = mod(j-1,nRow)+1; % ii = floor((j-1)/nCol)+1;
-    jj = floor((j-1)/nRow)+1; % jj = mod(j-1, nCol)+1;
+    if plotRowWise
+        ii = floor((j-1)/nCol)+1;
+        jj = mod(j-1, nCol)+1;
+    else
+        ii = mod(j-1,nRow)+1; % ii = floor((j-1)/nCol)+1;
+        jj = floor((j-1)/nRow)+1; % jj = mod(j-1, nCol)+1;
+    end
     clear goodPos
     goodPos = parameterCombinations{aList(j),eList(j),sList(j),fList(j),oList(j),cList(j),tList(j)};
     goodPos = setdiff(goodPos,badTrials);
